@@ -20,7 +20,6 @@
 package org.apache.iotdb.db.queryengine.plan.planner;
 
 import org.apache.iotdb.common.rpc.thrift.TEndPoint;
-import org.apache.iotdb.commons.exception.IllegalPathException;
 import org.apache.iotdb.commons.path.AlignedPath;
 import org.apache.iotdb.commons.path.MeasurementPath;
 import org.apache.iotdb.commons.path.PartialPath;
@@ -471,35 +470,29 @@ public class OperatorTreeGenerator extends PlanVisitor<Operator, LocalExecutionP
                 node.getPlanNodeId(),
                 ProjectOperator.class.getSimpleName());
 
-    List<String> inputColumnNames = node.getChild().getOutputColumnNames();
+    List<String> inputColumnNames = null;
     List<String> outputColumnNames = node.getOutputColumnNames();
     if (outputColumnNames == null) {
       outputColumnNames = context.getTypeProvider().getTemplatedInfo().getSelectMeasurements();
       // skip device column
       outputColumnNames = outputColumnNames.subList(1, outputColumnNames.size());
+      inputColumnNames = context.getTypeProvider().getTemplatedInfo().getMeasurementList();
 
-      List<PartialPath> inputColumnPaths = new ArrayList<>();
-      for (String inputColumnName : inputColumnNames) {
-        try {
-          inputColumnPaths.add(new PartialPath(inputColumnName));
-        } catch (IllegalPathException e) {
-          throw new IllegalArgumentException(
-              "Cannot parse column name to path: " + inputColumnName);
-        }
+      if (inputColumnNames.equals(outputColumnNames)) {
+        // no need to project
+        return child;
       }
-      inputColumnNames =
-          inputColumnPaths.stream().map(PartialPath::getMeasurement).collect(Collectors.toList());
-    }
-
-    if (inputColumnNames.equals(outputColumnNames)) {
-      // no need to project
-      return child;
+    } else {
+      inputColumnNames = node.getChild().getOutputColumnNames();
     }
 
     List<Integer> remainingColumnIndexList = new ArrayList<>();
     for (String outputColumnName : outputColumnNames) {
       int index = inputColumnNames.indexOf(outputColumnName);
-      checkState(index >= 0, "Cannot find column [%s] in child's output", outputColumnName);
+      if (index < 0) {
+        throw new IllegalStateException(
+            String.format("Cannot find column [%s] in child's output", outputColumnName));
+      }
       remainingColumnIndexList.add(index);
     }
     return new ProjectOperator(operatorContext, child, remainingColumnIndexList);

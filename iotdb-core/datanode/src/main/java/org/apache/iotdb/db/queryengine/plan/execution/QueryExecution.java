@@ -239,6 +239,8 @@ public class QueryExecution implements IQueryExecution {
     if (context.getQueryType() == QueryType.WRITE && analysis.isFailed()) {
       stateMachine.transitionToFailed(analysis.getFailStatus());
     }
+
+    logger.warn(" =========== fe cost: {}ns =========", System.nanoTime() - startTime);
   }
 
   private void checkTimeOutForQuery() {

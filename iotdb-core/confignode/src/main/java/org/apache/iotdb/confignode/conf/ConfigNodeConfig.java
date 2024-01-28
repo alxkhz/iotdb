@@ -69,7 +69,7 @@ public class ConfigNodeConfig {
   private String dataRegionConsensusProtocolClass = ConsensusFactory.IOT_CONSENSUS;
 
   /** Default number of DataRegion replicas. */
-  private int dataReplicationFactor = 1;
+  private int dataReplicationFactor = 2;
 
   /** Number of SeriesPartitionSlots per Database. */
   private int seriesSlotNum = 1000;
