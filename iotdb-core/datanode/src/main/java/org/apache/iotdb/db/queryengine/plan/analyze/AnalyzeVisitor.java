@@ -930,6 +930,12 @@ public class AnalyzeVisitor extends StatementVisitor<Analysis, MPPQueryContext> 
       }
     }
 
+    if (conJunctions.isEmpty()) {
+      // havingExpression =
+      throw new SemanticException(
+          "The size of legal expression in having clause should be greater than 0.");
+    }
+
     havingExpression = PredicateUtils.combineConjuncts(new ArrayList<>(conJunctions));
     TSDataType outputType = analyzeExpressionType(analysis, havingExpression);
     if (outputType != TSDataType.BOOLEAN) {

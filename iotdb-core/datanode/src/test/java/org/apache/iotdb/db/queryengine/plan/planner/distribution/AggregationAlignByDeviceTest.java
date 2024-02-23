@@ -448,4 +448,15 @@ public class AggregationAlignByDeviceTest {
     assertTrue(firstFiTopNode instanceof DeviceViewNode);
     assertTrue(firstFiTopNode.getChildren().get(0) instanceof HorizontallyConcatNode);
   }
+
+  @Test
+  public void hahaTest() {
+    sql = "select s1 from root.sg.d22 where XXXX>1 align by device";
+    // sql = "select first_value(s1) from root.sg.d22 having(first_value(XXXX)>1) align by device";
+    analysis = Util.analyze(sql, context);
+    logicalPlanNode = Util.genLogicalPlan(analysis, context);
+    planner = new DistributionPlanner(analysis, new LogicalQueryPlan(context, logicalPlanNode));
+    plan = planner.planFragments();
+    assertEquals(2, plan.getInstances().size());
+  }
 }
